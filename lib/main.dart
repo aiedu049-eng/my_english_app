@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'chat_screen.dart';
 
 void main() => runApp(EnglishApp());
 
@@ -25,10 +26,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('상황별 영어 회화'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('상황별 영어 회화'), centerTitle: true),
       body: ListView.builder(
         itemCount: topics.length,
         itemBuilder: (context, index) {
@@ -39,8 +37,14 @@ class HomeScreen extends StatelessWidget {
               title: Text(topics[index]['title']!),
               trailing: Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
-                // 클릭했을 때의 동작은 다음에 만들게요!
-                print('${topics[index]['title']} 클릭됨');
+                // Navigator는 화면 이동을 담당하는 도구입니다.
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ChatScreen(title: topics[index]['title']!),
+                  ),
+                );
               },
             ),
           );
