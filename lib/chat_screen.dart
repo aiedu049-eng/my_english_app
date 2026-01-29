@@ -1,54 +1,101 @@
 import 'package:flutter/material.dart';
+import 'data.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   final String title;
-
-  // 홈 화면에서 선택한 주제 이름을 받아옵니다.
   ChatScreen({required this.title});
 
   @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  // 0: 모두 보기, 1: 한글만, 2: 숨기기
+  int scriptMode = 0;
+
+  @override
   Widget build(BuildContext context) {
+    final dialogs = conversationData[widget.title] ?? [];
+
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          // 스크립트 모드 변경 버튼
+          TextButton(
+            onPressed: () {
+              setState(() {
+                scriptMode = (scriptMode + 1) % 3;
+              });
+            },
+            child: Text(
+              ['모두보기', '한글만', '숨기기'][scriptMode],
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               padding: EdgeInsets.all(16),
-              children: [
-                _buildChatBubble("AI", "안녕하세요! '$title' 상황입니다. 대화를 시작해볼까요?", false),
-                _buildChatBubble("나", "네, 준비됐어요!", true),
-                // 여기에 나중에 AI가 만든 15~20문장이 들어갈 거예요.
-              ],
+              itemCount: dialogs.length,
+              itemBuilder: (context, index) {
+                final chat = dialogs[index];
+                return _buildChatBubble(chat, chat['sender'] == '나');
+              },
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(10),
-            color: Colors.grey[200],
-            child: Text("여기에 마이크 버튼과 입력창이 들어갈 예정입니다."),
-          ),
+          _buildInputArea(),
         ],
       ),
     );
   }
 
-  // 대화 말풍선을 만드는 예쁜 도구
-  Widget _buildChatBubble(String sender, String text, bool isMe) {
+  Widget _buildChatBubble(Map<String, String> chat, bool isMe) {
+    // 모드에 따라 텍스트 결정
+    String displayText = "";
+    if (scriptMode == 0)
+      displayText = "${chat['en']}\n${chat['ko']}";
+    else if (scriptMode == 1)
+      displayText = chat['ko']!;
+    else
+      displayText = "??? (탭하여 확인)";
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isMe ? Colors.blue[100] : Colors.grey[200],
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Text(displayText),
+      ),
+    );
+  }
+
+  Widget _buildInputArea() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+      ),
+      child: Row(
         children: [
-          Text(sender, style: TextStyle(fontSize: 12)),
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 5),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isMe ? Colors.blue[100] : Colors.green[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(text),
+          IconButton(
+            icon: Icon(Icons.mic, color: Colors.red, size: 30),
+            onPressed: () {},
           ),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(hintText: "말하거나 입력하세요..."),
+            ),
+          ),
+          IconButton(icon: Icon(Icons.send), onPressed: () {}),
         ],
       ),
     );
